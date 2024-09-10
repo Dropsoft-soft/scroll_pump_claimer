@@ -4,6 +4,7 @@
 [![Telegram channel](https://img.shields.io/endpoint?url=https://runkit.io/damiankrawczyk/telegram-badge/branches/master?url=https://t.me/web3sftwr)](https://t.me/web3sftwr)
 
 🔔 CHANNEL: https://t.me/web3sftwr
+
 💰 DONATION EVM ADDRESS: 0x8cC0B0c49286b804Db02bd3a9412ec2bafF19d53
 
 ## Functionality
