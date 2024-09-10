@@ -1,0 +1,7 @@
+USE_PROXY = False        # Use proxies or no True/False
+RETRY = 2
+DELAY_FROM = 60
+DELAY_TO = 120
+USE_ENCRYPTED_WALLETS = False
+ENCRYPTED_PASSWORD = ""
+FEE_MULTIPLIER = 1.2
