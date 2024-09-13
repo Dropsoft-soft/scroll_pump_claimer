@@ -30,19 +30,6 @@ class Scroll(WebClient):
         response = await global_request(method='get', url=url, headers=self.headers, proxy=proxy)
         return response
   
-    @retry
-    async def get_tx_for_badge(self, domain, badge):
-        try:
-            proxy = None
-            if USE_PROXY == True:
-                proxy = WALLET_PROXIES[self.key]
-            url = f'{domain}/claim?badge={badge}&recipient={self.address}'
-            status_code, response = await global_request(wallet=self.address, method='get', url=url, headers=self.headers, proxy=proxy)
-            return response
-        except Exception as error:
-            logger.error(error)
-            return False
-
     @retry  
     async def mintFromJSON(self, amount, signature):
         mint_contract = self.web3.eth.contract(address=Web3.to_checksum_address('0xCe64dA1992Cc2409E0f0CdCAAd64f8dd2dBe0093'), abi=SCROLL_MAIN_ABI)
@@ -63,22 +50,35 @@ class Scroll(WebClient):
         else:
             logger.error(f"[{self.id}] {self.address} | claim pump token | tx is failed | {tx_link}")
       
+    @retry
+    async def getSign(self):
+        proxy = None
+        if USE_PROXY == True:
+            proxy = WALLET_PROXIES[self.key]
+        url = f'https://api.scrollpump.xyz/api/Airdrop/GetSign?address={self.address}'
+        response = await global_request(method='get', url=url, headers=self.headers, proxy=proxy)
+        return response
         
     async def claim_airdrop(self):
         try:
             is_elligable_response = await self.is_elligable_address()
+            print(is_elligable_response)
             if 'data' in is_elligable_response:
                 base_reward = int(is_elligable_response['data']['baseReward'])
                 bonus_reward = int(is_elligable_response['data']['bonusReward'])
                 total = base_reward+bonus_reward
                 logger.info(f'elligable to claim: {total}')
-                message = str(is_elligable_response['message']).lower()
-                if message == 'Reward retrieved successfully'.lower():
-                    logger.success('drop already claimed')
-                    return
-                elif 'sign' in is_elligable_response['data']:
-                    signature = is_elligable_response['data']['sign']
-                    await self.mintFromJSON(total, signature)
+                if total > 0:
+                    is_claimed = await self.is_claimed()
+                    if is_claimed:
+                        logger.info('Drop claimed')
+                    else:
+                        sign_data = await self.getSign()
+                        if 'sign' in is_elligable_response['data']:
+                            signature = is_elligable_response['data']['sign']
+                            await self.mintFromJSON(total, signature)
+                        else:
+                            logger.info(f'No sign data {sign_data}')
                 else:
                     logger.info('skip')
             else:
@@ -86,3 +86,7 @@ class Scroll(WebClient):
         except Exception as error:
             logger.error(error)
 
+    async def is_claimed(self):
+        mint_contract = self.web3.eth.contract(address=Web3.to_checksum_address('0xCe64dA1992Cc2409E0f0CdCAAd64f8dd2dBe0093'), abi=SCROLL_MAIN_ABI)
+        claimed = await mint_contract.functions.claimed(self.address).call()
+        return claimed
