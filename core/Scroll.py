@@ -76,7 +76,8 @@ class Scroll(WebClient):
                         sign_data = await self.getSign()
                         if 'sign' in is_elligable_response['data']:
                             signature = is_elligable_response['data']['sign']
-                            await self.mintFromJSON(total, signature)
+                            amount = int(is_elligable_response['data']['amount'])
+                            await self.mintFromJSON(amount, signature)
                         else:
                             logger.info(f'No sign data {sign_data}')
                 else:
